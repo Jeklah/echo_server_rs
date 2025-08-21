@@ -53,12 +53,11 @@ fn create_tuned_listener(addr: SocketAddr) -> Result<TcpListener> {
 
     // Allow quick restarts and multi-process/multi-instance scaling.
     socket.set_reuse_address(true)?;
-    #[cfg(target_os = "linux")]
-    socket.set_reuse_port(true)?;
+    enable_reuse_port(&socket)?;
 
     // Buffer sizes; tune to your workload/latency goals.
-    socket.set_recv_buffer_size(TCP_RCVBUF as i32)?;
-    socket.set_send_buffer_size(TCP_SNDBUF as i32)?;
+    socket.set_recv_buffer_size(TCP_RCVBUF)?;
+    socket.set_send_buffer_size(TCP_SNDBUF)?;
 
     // Disable Nagle on the listening socket so accepted sockets inherit it on some OSes.
     socket.set_nodelay(true)?;
@@ -108,4 +107,29 @@ async fn handle_conn(mut stream: TokioTcpStream) -> Result<()> {
         // Drop consumed bytes by truncating back (no need to keep them).
         buf.truncate(start);
     }
+}
+
+#[cfg(target_os = "linux")]
+fn enable_reuse_port(socket: &Socket) -> std::io::Result<()> {
+    use std::os::fd::AsRawFd;
+    let val: libc::c_int = 1;
+    let ret = unsafe {
+        libc::setsockopt(
+            socket.as_raw_fd(),
+            libc::SOL_SOCKET,
+            libc::SO_REUSEPORT,
+            &val as *const _ as *const libc::c_void,
+            std::mem::size_of_val(&val) as libc::socklen_t,
+        )
+    };
+    if ret == -1 {
+        Err(std::io::Error::last_os_error())
+    } else {
+        Ok(())
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
+fn enable_reuse_port(_sock: &Socket) -> std::io::Result<()> {
+    Ok(()) // No-op on non-Linux, as SO_REUSEPORT is not available
 }
