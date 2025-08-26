@@ -4,8 +4,17 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-tokio = { version = "1", features = ["rt-multi-thread", "net", "io-util", "macros"] }
+tokio = { version = "1", features = ["full", "time"] }
 bytes = "1"
 socket2 = "0.5"
 anyhow = "1"
 libc = "0.2.175"
+
+[[bin]]
+name = "echo_server_rs"
+path = "src/main.rs"
+
+
+[[bin]]
+name = "bench"
+path = "src/bin/bench.rs"
