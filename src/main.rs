@@ -13,8 +13,8 @@ use tokio::{
 /// Tuneables
 /// The size of the buffer used for reading and writing data
 const BUF_SIZE: usize = 64 * 1024; // 64 KiB
-const TCP_RCVBUF: usize = 1 << 20; // 1 MiB
-const TCP_SNDBUF: usize = 1 << 20; // 1 MiB
+const TCP_RCVBUF: usize = 1 << 20; // 1 MB
+const TCP_SNDBUF: usize = 1 << 20; // 1 MB
 const BACKLOG: i32 = 1024; // Maximum number of pending connections
 
 #[tokio::main(flavor = "multi_thread")]
